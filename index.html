@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        
+        <title>Image Processing</title>
+        
+        <link rel="stylesheet" href="assets/css/main.css">
+        <link href='http://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900' rel='stylesheet' type='text/css'>
+    </head>
+
+    <body id="editor" ng-app="ImageEditor" ng-strict-di>
+        <div ng-controller="MainController" ng-cloak style="height: 100%">
+            <section ng-hide="!loading" id="spinner">
+                <md-progress-circular class="md-spinner" md-diameter="100" md-mode="indeterminate"></md-progress-circular>
+            </section>
+
+            <section id="left-sidebar" ed-tabs="basics" class="md-whiteframe-z1">
+                <!-- <div id="sidebar-toggler" ed-toggle-sidebar>
+                    <md-button class="md-fab md-primary" aria-label="Toggle Sidebar">
+                        <i class="mdi mdi-edit show-icon"></i>
+                        <i class="mdi mdi-close close-icon"></i>
+                    </md-button>
+                </div> -->
+
+                <div id="navigation-bar">
+                    <div data-activates="basics" class="nav-item">
+                        <i class="mdi mdi-image"></i>
+                        <div class="title">Basics Function</div>
+                    </div>
+                    <div data-activates="text" class="nav-item">
+                        <i class="mdi mdi-format-bold"></i>
+                        <div class="title pull-up">Insert Text </div>
+                    </div>
+                    <div data-activates="drawing" class="nav-item">
+                        <i class="mdi mdi-brush"></i>
+                        <div class="title">Drawing</div>
+                    </div>
+                    <div data-activates="filters" class="nav-item">
+                        <i class="mdi mdi-brightness-6"></i>
+                        <div class="title">Filters</div>
+                    </div>
+                </div>
+
+                <div id="tabs">
+                    <section id="basics" data-index="1" class="tab">
+                        <h2 class="tab-title">Function</h2>
+                        <div ng-controller="CropController" class="basics-item">
+                            <div ng-click="cropper.start($event)">
+                                <i class="mdi mdi-crop basics-icon"></i>
+                                <div class="icon-title">Crop</div>
+                            </div>
+
+                            <div data-name="crop" class="actions-menu md-whiteframe-z1" ng-class="activePanel == 'crop' ? 'open' : 'closed'">
+                                <div class="menu-header"><h3>Crop</h3></div>
+                                <!-- <div class="row">
+                                    <md-input-container class="col-sm-6">
+                                        <label>Width</label>
+                                        <input type="text" ng-model="width" ng-change="cropzone.setWidth(width)">
+                                    </md-input-container>
+                                    <md-input-container class="col-sm-6">
+                                        <label>Height</label>
+                                        <input type="text" ng-model="height" ng-change="cropzone.setHeight(height)">
+                                    </md-input-container>
+                                </div> -->
+                                <div class="buttons">
+                                    <md-button ng-click="cropper.stop()">cancel</md-button>
+                                    <md-button ng-click="cropper.crop()" class="md-primary md-raised">crop</md-button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-controller="RotateController" class="basics-item">
+                            <div ng-click="startRotator($event)">
+                                <i class="mdi mdi-rotate-right basics-icon"></i>
+                                <div class="icon-title">Rotate</div>
+                            </div>
+
+                            <div data-name="rotate" class="actions-menu md-whiteframe-z1" ng-class="activePanel == 'rotate' ? 'open' : 'closed'">
+                            <div class="menu-header"><h3>Rotate</h3></div>
+
+                                <div class="rotate-icons">
+                                    <i class="mdi mdi-rotate-left" ng-click="rotateProper(-90)"></i>
+                                    <i class="mdi mdi-rotate-right" ng-click="rotateProper(90)"></i>
+                                </div>
+
+                                <!-- <section class="menu-group">
+                                    <div class="md-slider">
+                                        <div class="slider-label">Angle</div>
+                                        <md-slider aria-label="Angle" step="1" ng-model="angle" ng-change="rotate(angle)" min="0" max="360" ></md-slider>
+                                    </div>
+                                    <div class="slider-input">
+                                        <input type="number" ng-model="angle" ng-change="rotate(angle)" min="0" max="360"/>
+                                    </div>
+                                </section> -->
+
+                                <div class="buttons">
+                                    <md-button ng-click="cancel()">cancel</md-button>
+                                    <md-button ng-click="applyRotation()" class="md-primary md-raised">apply</md-button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-controller="ResizeController" class="basics-item">
+                            <div ng-click="startResizer($event)">
+                                <i class="mdi mdi-open-with basics-icon"></i>
+                                <div class="icon-title">Resize</div>
+                            </div>
+
+                            <div data-name="resize" class="actions-menu md-whiteframe-z1" ng-class="activePanel == 'resize' ? 'open' : 'closed'">
+                                <div class="menu-header"><h3>Resize</h3></div>
+
+                                <div class="clearfix">
+                                    <md-input-container class="col-sm-6">
+                                        <label>Width</label>
+                                        <input type="number" ng-model="width" ng-change="aspectToHeight(width)">
+                                    </md-input-container>
+
+                                    <md-input-container class="col-sm-6">
+                                        <label>Height</label>
+                                        <input type="number" ng-model="height" ng-change="aspectToWidth(height)">
+                                    </md-input-container>
+                                </div>
+
+                                <!-- <md-checkbox ng-model="usePercentages" ng-change="togglePercentages(usePercentages)">Use Percentages</md-checkbox> -->
+                                <md-checkbox ng-model="constrainProportions">Maintain Aspect Ratio</md-checkbox>
+
+                                <div class="buttons margin-top">
+                                    <md-button ng-click="close()">close</md-button>
+                                    <md-button ng-click="apply()" class="md-primary md-raised">resize</md-button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="text" data-index="2" class="tab" ng-controller="TextController">
+                        <h2 class="tab-title">Pick a Font</h2>
+
+                        <div class="filter-inputs">
+                            <div class="filter-input">
+                                <md-select ng-model="filters.category" ng-change="fonts.paginator.filter(filters)" placeholder="Select a Type">
+                                    <md-option value="handwriting">Handwriting</md-option>
+                                    <md-option value="sans-serif">Sans Serif</md-option>
+                                </md-select>
+                            </div>
+
+                            <md-input-container class="filter-input">
+                                <label>Search</label>
+                                <input type="text" ng-model="filters.family" ng-change="fonts.paginator.filter(filters)">
+                            </md-input-container>
+                        </div>
+
+                        <div ng-hide="activeTab !== 'text'" class="pagination md-whiteframe-z1" ed-fonts-pagination></div>
+
+                        <section class="fonts-preview" ed-pretty-scrollbar ed-scroll-axis="y" ed-scroll-theme="light">
+                            <div class="font" ng-style="{ 'font-family':  font.family }" ng-repeat="font in fonts.paginator.currentItems" 
+                            ng-click="changeFont(font.family, $event)">{{ font.family }}</div>
+                        </section>
+
+                        <div data-name="text" class="actions-menu wider md-whiteframe-z1" ng-class="isPanelEnabled() ? 'open' : 'closed'">
+                            <div class="menu-header"><h3>Text</h3></div>
+
+                            <section class="actions-menu-inner" ng-style="{ 'max-height': maxPanelHeight }" ed-pretty-scrollbar ed-scroll-axis="y" 
+                            ed-scroll-theme="light">
+                                <div class="md-slider">
+                                    <div class="slider-label">Font Size</div>
+                                    <md-slider aria-label="text size" step="1" ng-change="text.setProperty('fontSize', fontSize)" ng-model="fontSize"
+                                     min="1" max="100"></md-slider>
+                                </div>
+                                <div class="slider-input">
+                                    <input type="number" ng-change="text.setProperty('fontSize', fontSize)" ng-model="fontSize"/>
+                                </div>
+
+                                <!-- <div class="text-styles">
+                                    <div class="text-style-toolbar" ed-text-align-buttons>
+                                        <i data-align="left" class="mdi mdi-format-align-left"></i>
+                                        <i data-align="center" class="mdi mdi-format-align-center active"></i>
+                                        <i data-align="right" class="mdi mdi-format-align-right"></i>
+                                    </div>
+                                    <div class="text-style-toolbar text-decoration-buttons" ed-text-decoration-buttons>
+                                        <div data-decoration="underline" class="underline toolbar-btn">U</div>
+                                        <div data-decoration="line-through" class="line-through toolbar-btn">S</div>
+                                        <div data-decoration="overline" class="overline toolbar-btn">O</div>
+                                        <div data-decoration="italic" class="italic toolbar-btn">I</div>
+                                    </div>
+                                </div> -->
+
+                                <div class="colorpicker">
+                                    <div class="colorpicker-label"><span>Color</span></div>
+                                    <input ed-color-picker="text.setProperty('fill', color)" type="text"/>
+                                </div>
+
+                                <div class="buttons">
+                                    <md-button ng-click="finishAddingTextToCanvas()" class="md-primary md-raised">Save</md-button>
+                                    <md-button ng-click="cancelAddingTextToCanvas()" class="md-raised">Cancel</md-button>
+                                </div>
+                            </section>
+                        </div>
+                    </section>
+
+                    <section id="drawing" class="tab" data-index="3" ng-controller="DrawingController">
+                        <h2 class="tab-title">Pick a Brush</h2>
+                        <div id="brushes">
+                            <div ng-repeat="brush in drawing.availableBrushes" ng-class="{ active: drawing.activeBrushName == brush }" 
+                            class="brush" ng-click="changeBrush(brush, $event)">
+                                <img title="{{ brush }}" class="img-responsive" ng-src="assets/images/brushes/{{brush}}.png"/>
+                            </div>
+                        </div>
+
+                        <div data-name="drawing" class="actions-menu wider md-whiteframe-z1" ng-class="activePanel == 'drawing' ? 'open' : 'closed'">
+                            <div class="menu-header"><h3>Brush</h3></div>
+
+                            <section class="actions-menu-inner" ng-style="{ 'max-height': maxPanelHeight }" 
+                            ed-pretty-scrollbar ed-scroll-axis="y" ed-scroll-theme="light">
+                                <div class="md-slider">
+                                    <div class="slider-label">Brush Thickness</div>
+                                    <md-slider aria-label="brush thickness" step="1" ng-model="drawing.params.brushWidth" 
+                                    ng-change="drawing.setProperty('width', drawing.params.brushWidth)" min="1" max="100"></md-slider>
+                                </div>
+                                <div class="slider-input">
+                                    <input type="number" ng-change="drawing.setProperty('width', drawing.params.brushWidth)" ng-model="drawing.params.brushWidth"/>
+                                </div>
+
+                                <div class="colorpicker">
+                                    <div class="colorpicker-label"><span>Color</span></div>
+                                    <input ng-model="drawing.params.brushColor" ed-color-picker="drawing.setProperty('color', color)" type="text"/>
+                                </div>
+
+                                <div class="buttons">
+                                    <md-button ng-click="finishAddingDrawingsToCanvas()" class="md-primary md-raised">Save</md-button>
+                                    <md-button ng-click="cancelAddingDrawingsToCanvas()" class="md-raised">Cancel</md-button>
+                                </div>
+                            </section>
+                        </div>
+                    </section>
+
+                    <section id="filters" class="tab" data-index="4" ng-controller="FiltersController">
+                        <h2 class="tab-title">Pick a Filter</h2>
+                        <div class="filters-list row" ed-pretty-scrollbar ed-scroll-axis="y" ed-scroll-theme="light">
+                            <figure ng-class="{ applied: filters.filterAlreadyApplied(filter.name) }" ng-repeat="filter in filters.all" ng-click="filters.applyFilter(filter)" 
+                            class="filter col-sm-6">
+                                <div class="filter-image">
+                                    <img ng-src="assets/images/filters/{{ filter.name.toLowerCase() }}.png" class="img-responsive md-whiteframe-z1"/>
+                                    <div ng-class="{ 'remove-only': !filter.options }" class="remove-filter-overlay">
+                                        <i class="mdi mdi-cancel"></i>
+                                        <i ng-if="filter.options" ng-click="filters.lastAppliedFilter = filter; $event.stopPropagation();" class="mdi mdi-settings"></i>
+                                    </div>
+                                </div>
+                                <figcaption>{{ filter.displayName || filter.name }}</figcaption>
+                            </figure>
+                        </div>
+
+                        <div class="actions-menu md-whiteframe-z1" ng-class="filters.lastAppliedFilter.options ? 'open' : 'closed'">
+                            <div class="menu-header"><h3>{{ filters.lastAppliedFilter.name }}</h3></div>
+
+                            <section class="actions-menu-inner" ng-style="{ 'max-height': maxPanelHeight }" ed-pretty-scrollbar ed-scroll-axis="y" ed-scroll-theme="light">
+                                <div ng-repeat="(key,value) in filters.lastAppliedFilter.options">
+
+                                    <section ng-if="!value.colorpicker && !value.select">
+                                        <div class="md-slider">
+                                            <div class="slider-label">{{ key == filters.lastAppliedFilter.name ? 'amount' : key }}</div>
+                                            <md-slider
+                                                    md-discrete
+                                                    aria-label="{{ key }}"
+                                                    step="{{ value.step ? value.step : 1 }}"
+                                                    ng-model="filters.lastAppliedFilter.options[key].current"
+                                                    ng-change="filters.applyValue(filters.lastAppliedFilter.name, key, filters.lastAppliedFilter.options[key].current)"
+                                                    min="{{ value.min ? value.min : 1 }}"
+                                                    max="{{ value.max ? value.max : 250 }}"
+                                                    ></md-slider>
+                                        </div>
+                                        <div class="slider-input">
+                                            <input ng-if="!value.colorpicker" type="number" ng-change="filters.applyValue(filters.lastAppliedFilter.name, key, filters.lastAppliedFilter.options[key].current)" ng-model="filters.lastAppliedFilter.options[key].current"/>
+                                        </div>
+                                    </section>
+
+                                    <!-- <section ng-if="value.colorpicker" class="colorpicker">
+                                        <div class="colorpicker-label"><span>{{ key }}</span></div>
+                                        <input ed-discrete ng-model="filters.lastAppliedFilter.options[key].current" start-color="{{ filters.lastAppliedFilter.options[key].current }}" ed-color-picker="filters.applyValue(filters.lastAppliedFilter.name, key, color)" type="text"/>
+                                    </section> -->
+
+                                    <!-- <section ng-if="value.select">
+                                        <div class="col-sm-8 pull-down">{{ key }}</div>
+                                        <div class="col-sm-4 no-padding">
+                                            <select class="form-control" ng-model="filters.lastAppliedFilter.options[key].current" 
+                                            ng-change="filters.applyValue(filters.lastAppliedFilter.name, key, filters.lastAppliedFilter.options[key].current)">
+                                                <option ng-repeat="mode in filters.lastAppliedFilter.options[key].available" value="{{ mode }}">{{ mode }}</option>
+                                            </select>
+                                        </div>
+                                    </section> -->
+                                </div>
+                            </section>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <section id="viewport">
+                <section id="top-panel" class="md-whiteframe-z1" ng-controller="TopPanelController">
+                    <!-- <md-button ng-click="openUploadDialog($event)" ng-if="!getParam('hideOpenButton')">Open</md-button>
+                    <md-button ng-class="{ inactive: !historyPanelOpen }" ng-click="toggleRightPanel('history', $event)">History</md-button>
+                    <md-button ng-class="{ inactive: !objectsPanelOpen }" ng-click="toggleRightPanel('objects', $event)">Layers</md-button> -->
+                    <md-button ng-click="openSaveDialog($event)" class="md-primary md-raised" >Save</md-button>
+                </section>
+
+                <canvas ng-show="started" id="canvas" class="md-whiteframe-z2"></canvas>
+            </section>
+
+            <script src="assets/js/scripts.min.js?v23"></script>
+
+            <script type="application/ng-template" id="gradient-sheet-template">
+                <md-bottom-sheet class="bottom-sheet gradients-sheet">
+                    <div class="items-list" ed-pretty-scrollbar>
+                        <div ng-repeat="g in shapes.gradients" ng-style="{background: 'url(assets/images/gradients/'+($index+1)+'.png)'}" ng-click="shapes.fillWithGradient($index+1)" class="item md-whiteframe-z1"></div>
+                    </div>
+                </md-bottom-sheet>
+            </script>
+
+            <script type="application/ng-template" id="image-sheet-template">
+                <md-bottom-sheet class="bottom-sheet images-sheet">
+                    <div class="upload-new" ng-click="showDialog($event)">
+                        <i class="mdi mdi-cloud-upload"></i>
+                        <span class="icon-label">Upload</span>
+                    </div>
+                    <div class="items-list" ed-pretty-scrollbar>
+                        <div ng-repeat="t in shapes.textures track by $index" ng-style="{background: 'url(assets/images/textures/'+$index+'.png)'}" ng-click="shapes.fillWithImage('assets/images/textures/'+$index+'.png')" class="item md-whiteframe-z1"></div>
+                    </div>
+                </md-bottom-sheet>
+            </script>
+
+            <script type="application/ng-template" id="texture-upload-dialog-template">
+                <md-dialog class="upload-file-dialog">
+
+                    <label class="pretty-upload">
+                        <input type="file" ed-file-uploader="shapes.fillWithImage" ed-close-after/>
+                        <i class="mdi mdi-cloud-upload"></i>
+                        <span class="upload-button-label">Upload From Computer</span>
+                    </label>
+                </md-dialog>
+            </script>
+
+            <script type="application/ng-template" id="save-image-dialog">
+                <md-dialog class="upload-file-dialog save-dialog">
+                    <md-input-container>
+                        <label>File Name</label>
+                        <input type="text" ng-model="imageName">
+                    </md-input-container>
+
+                    <md-radio-group ng-model="imageType">
+                        <md-radio-button value="jpeg">JPEG</md-radio-button>
+                        <md-radio-button value="png">PNG</md-radio-button>
+                    </md-radio-group>
+
+                    <div ng-if="imageType === 'jpeg'">
+                        <!-- <div class="slider-label">Quality {{ imageQuality }}</div>
+                        <md-slider aria-label="Angle" md-discrete ng-model="imageQuality" step="1" min="1" max="10" ></md-slider> -->
+                    </div>
+
+                    <md-button ng-click="saveImage($event)" class="md-raised md-primary">Save</md-button>
+
+                    <div class="demo-alert" ng-if="isDemo">Image saving is disabled on demo site.</div>
+                </md-dialog>
+            </script>
+
+            <script type="application/ng-template" id="main-image-upload-dialog-template">
+                <md-dialog class="upload-file-dialog">
+                        <label class="pretty-upload">
+                            <input type="file" ed-file-uploader="showImagePreview"/>
+                            <i class="mdi mdi-cloud-upload"></i>
+                            <span class="upload-button-label">Upload From Computer</span>
+                        </label>
+
+                        <div ng-show="canOpenImage">
+                            <div class="img-preview"></div>
+
+                            <div class="buttons">
+                                <md-button ng-click="openImage()" class="md-primary md-raised">Open</md-button>
+                                <md-button ng-click="closeUploadDialog()" class="md-raised">Close</md-button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="new-canvas" ng-show="openImageMode === 'create'">
+                        <md-input-container>
+                            <label>Width</label>
+                            <input min="1" max="5000" type="number" ng-model="canvasWidth">
+                        </md-input-container>
+
+                        <md-input-container>
+                            <label>Height</label>
+                            <input min="1" max="5000" type="number" ng-model="canvasHeight">
+                        </md-input-container>
+
+                        <div class="buttons">
+                            <md-button ng-click="openImageMode = 'open'" class="md-raised">Cancel</md-button>
+                            <md-button ng-click="createNewCanvas(canvasWidth, canvasHeight)" class="md-primary md-raised">Create</md-button>
+                        </div>
+                    </div>
+                </md-dialog>
+            </script>
+
+            <script type="text/ng-template" id="modals/polygon.html">
+                <md-dialog class="md-modal">
+                    <div class="md-modal-header">
+                        <h1>Polygon Instructions</h1>
+                        <div ng-click="closeModal()" class="md-close-modal"><i class="mdi mdi-close"></i></div>
+                    </div>
+
+                    <ol>
+                        <li>Click on the canvas where you want to start the polygon edge.</li>
+                        <li>Drag your mouse.</li>
+                        <li>Click again where you want to end the edge.</li>
+                        <li>Repeat to add more edges.</li>
+                        <li>Hit escape or click anywhere outside of canvas to finish.</li>
+                    </ol>
+
+                    <div class="buttons">
+                        <md-button class="md-primary md-raised" ng-click="closeModal()">got it</md-button>
+                    </div>
+                </md-dialog>
+        </script>
+        </div>
+    </body>
+
+</html>
+
+
+
+
